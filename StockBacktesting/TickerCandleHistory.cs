@@ -18,6 +18,7 @@ namespace StockBacktesting
         private const string CBOE_BZX = "CBOE";
         private const string GPW = "WSE";
 
+        public string TickerFullName { get; private set; }
         public string TickerName { get; private set; }
         public string Exchange { get; private set; }
         public string BaseCurrency { get; private set; }
@@ -27,10 +28,19 @@ namespace StockBacktesting
 
         public TickerCandleHistory(string tickerName)
         {
+            TickerFullName = tickerName;
             string[] parts = tickerName.Split(", ", 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             TickerName = parts[0];
             Exchange = GetSimplifiedExchangeName(parts);
             BaseCurrency = GetCurrencyFromSimplifiedExchangeName(Exchange, TickerName);
+        }
+
+        public TickerCandleHistory(string tickerFullName, string tickerName, string exchange, string baseCurrency)
+        {
+            TickerFullName = tickerFullName;
+            TickerName = tickerName;
+            Exchange = exchange;
+            BaseCurrency = baseCurrency;
         }
 
         public TickerCandle FindClosestCandleToTime(DateTime dateTimeUtc, TimeSpan maxDist)
