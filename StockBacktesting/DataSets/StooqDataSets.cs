@@ -2,16 +2,13 @@
 using StockBacktesting.Model;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace StockBacktesting.DataSets
 {
-    internal class StooqDataSets
+    internal static partial class StooqDataSets
     {
         public static Dictionary<string, TickerCandleHistory> GetSelectedFromZips(string dailyUsZipPath, string dailyWorldZipPath, string dailyPlZipPath)
         {
@@ -35,100 +32,10 @@ namespace StockBacktesting.DataSets
 
         public static IEnumerable<TickerCandleHistory> EnumerateSelectedFromZipArchives(ZipArchive dailyUsZip, ZipArchive dailyWorldZip, ZipArchive dailyPlZip)
         {
-            return EnumerateSelectedFromDailyUsZipArchive(dailyUsZip)
-                .Concat(EnumerateSelectedFromDailyWorldZipArchive(dailyWorldZip))
-                .Concat(EnumerateSelectedFromDailyPlZipArchive(dailyPlZip));
+            return DailyUs.EnumerateSelectedFromZipArchive(dailyUsZip)
+                .Concat(DailyWorld.EnumerateSelectedFromZipArchive(dailyWorldZip))
+                .Concat(DailyPl.EnumerateSelectedFromZipArchive(dailyPlZip));
         }
-
-        private static string BaseCurrency_USD(string tickerName) => "USD";
-        private static string BaseCurrency_PLN(string tickerName) => "PLN";
-        private static string BaseCurrency_CurrencyExchange(string tickerName)
-        {
-            int underscorePos = tickerName.IndexOf('_');
-            if (underscorePos != -1)
-            {
-                // index or basket
-                return tickerName.Substring(underscorePos + 1);
-            }
-            else if (tickerName.Length != 6)
-            {
-                throw new Exception($"Ticker name '{tickerName}' cannot be recognized as currency");
-            }
-
-            return tickerName.Substring(3);
-        }
-
-        private const string NyseEtfsDailyUsZipPath = @"data/daily/us/nyse etfs/";
-        private static string[] s_selectedNyseEtfsFromDailyUs = new[]
-        {
-            "SPY",
-        };
-
-        private const string NyseStocksDailyUsZipPath = @"data/daily/us/nyse stocks/";
-        private static string[] s_selectedNyseStocksFromDailyUs = new[]
-        {
-            "AAPL",
-            "MSFT",
-            "GOOGL",
-            "USB",
-            "TSLA",
-            "ADSK",
-            "NFLX",
-            "AMD",
-            "AVGO",
-            "AMZN",
-            "SPGI",
-            "PYPL",
-            "SBUX",
-            "QCOM",
-            "FB",
-        };
-
-        private static (StockExchange, string, string[], Func<string, string>)[] s_selectedFromDailyUs = new (StockExchange, string, string[], Func<string, string>)[]
-        {
-            (StockExchange.NYSE, NyseEtfsDailyUsZipPath, s_selectedNyseEtfsFromDailyUs, BaseCurrency_USD),
-            (StockExchange.NYSE, NyseStocksDailyUsZipPath, s_selectedNyseStocksFromDailyUs, BaseCurrency_USD),
-        };
-
-        public static IEnumerable<TickerCandleHistory> EnumerateSelectedFromDailyUsZipArchive(ZipArchive zip)
-            => EnumerateSelectedFromZip(zip, s_selectedFromDailyUs);
-
-        private const string CurrenciesDailyWorldZipPath = @"data/daily/world/currencies/";
-        private static string[] s_selectedCurrenciesFromDailyWorld = new[]
-        {
-            "PLNUSD",
-            "JPYUSD",
-            "EURUSD",
-            "GBPUSD",
-            "XAUUSD", // GOLD
-            "XAGUSD", // SILVER
-            "XPTUSD", // PLATINUM
-        };
-
-        private static (StockExchange, string, string[], Func<string, string>)[] s_selectedFromDailyWorld = new (StockExchange, string, string[], Func<string, string>)[]
-        {
-            (StockExchange.Currency, CurrenciesDailyWorldZipPath, s_selectedCurrenciesFromDailyWorld, BaseCurrency_CurrencyExchange),
-        };
-
-        public static IEnumerable<TickerCandleHistory> EnumerateSelectedFromDailyWorldZipArchive(ZipArchive zip)
-            => EnumerateSelectedFromZip(zip, s_selectedFromDailyWorld);
-
-
-        private const string WseStocksDailPlZipPath = @"data/daily/pl/wse stocks/";
-        private static string[] s_selectedFromWseStocksDailyPl = new[]
-        {
-            "CDR",
-            "KGH",
-            "PKN",
-        };
-
-        private static (StockExchange, string, string[], Func<string, string>)[] s_selectedFromDailyPl = new (StockExchange, string, string[], Func<string, string>)[]
-{
-            (StockExchange.WSE, WseStocksDailPlZipPath, s_selectedFromWseStocksDailyPl, BaseCurrency_PLN),
-        };
-
-        public static IEnumerable<TickerCandleHistory> EnumerateSelectedFromDailyPlZipArchive(ZipArchive zip)
-            => EnumerateSelectedFromZip(zip, s_selectedFromDailyPl);
 
         private static IEnumerable<TickerCandleHistory> EnumerateSelectedFromZip(ZipArchive zip, (StockExchange, string, string[], Func<string, string>)[] selected)
         {
