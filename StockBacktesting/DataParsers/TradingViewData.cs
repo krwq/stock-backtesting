@@ -1,9 +1,10 @@
-﻿using System;
+﻿using StockBacktesting.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace StockBacktesting
+namespace StockBacktesting.DataParsers
 {
     internal static class TradingViewData
     {
@@ -34,7 +35,7 @@ namespace StockBacktesting
                 TickerCandleHistory hist;
                 if (!ret.TryGetValue(tickerName, out hist))
                 {
-                    hist = new TickerCandleHistory(tickerName);
+                    hist = CreateCandleHistory(tickerName);
                     ret[tickerName] = hist;
                 }
 
@@ -150,6 +151,66 @@ namespace StockBacktesting
             else
             {
                 return decimal.Parse(val);
+            }
+        }
+
+        private static TickerCandleHistory CreateCandleHistory(string originalTickerName)
+        {
+            string[] parts = originalTickerName.Split(", ", 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            string simplifiedTickerName = parts[0];
+            StockExchange exchange = GetSimplifiedExchangeName(parts);
+            string baseCurrency = GetCurrencyFromSimplifiedExchangeName(exchange, simplifiedTickerName);
+            return new TickerCandleHistory(originalTickerName, simplifiedTickerName, exchange, baseCurrency);
+        }
+
+        private static StockExchange GetSimplifiedExchangeName(string[] parts)
+        {
+            if (parts.Length == 2)
+            {
+                // special handling for GOLD, PLATINUM, PALLADIUM, SILVER?
+                return GetExchangeFromName(parts[1]);
+            }
+            else
+            {
+                // most likely forex
+                if (parts[0].Length == 6 && parts[0].StartsWith("USD") || parts[0].EndsWith("USD"))
+                    return StockExchange.Currency;
+
+                throw new Exception($"Unknown exchange for ticker '{parts[0]}'");
+            }
+        }
+
+        private static StockExchange GetExchangeFromName(string name)
+        {
+            switch (name)
+            {
+                case "TVC": return StockExchange.Commodity;
+                case "FOREX": return StockExchange.Currency;
+                case "IDC": return StockExchange.Currency;
+                case "FXCM": return StockExchange.Currency;
+                case "CBOE BZX": return StockExchange.NYSE;
+                case "GPW": return StockExchange.WSE;
+                default: throw new Exception($"TODO: Simplify full exchange name '{name}'");
+            }
+        }
+
+        private static string GetCurrencyFromSimplifiedExchangeName(StockExchange exchange, string tickerName)
+        {
+            switch (exchange)
+            {
+                case StockExchange.Commodity: return "USD"; // ?
+                case StockExchange.Currency:
+                    {
+                        if (tickerName.Length != 6)
+                        {
+                            throw new Exception($"Currency exchange ticker '{tickerName}' does not have standard format");
+                        }
+
+                        return tickerName.Substring(3);
+                    }
+                case StockExchange.NYSE: return "USD";
+                case StockExchange.WSE: return "PLN";
+                default: throw new Exception($"TODO: Unrecognized exchange name {exchange}");
             }
         }
 

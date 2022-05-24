@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using StockBacktesting.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockBacktesting
+namespace StockBacktesting.DataParsers
 {
     // https://data.nasdaq.com/tools/api
     // https://api.nasdaq.com/api/quote/MSFT/dividends?assetclass=stocks

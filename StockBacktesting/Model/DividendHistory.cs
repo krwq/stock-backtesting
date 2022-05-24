@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockBacktesting
+namespace StockBacktesting.Model
 {
     internal class DividendHistory
     {

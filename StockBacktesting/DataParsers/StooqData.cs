@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StockBacktesting.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -6,17 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockBacktesting
+namespace StockBacktesting.DataParsers
 {
     internal static class StooqData
     {
-        public static TickerCandleHistory LoadFromZip(ZipArchiveEntry zipEntry, string exchange, Func<string, string> baseCurrency = null)
+        public static TickerCandleHistory LoadFromZipEntry(ZipArchiveEntry zipEntry, StockExchange exchange, Func<string, string> baseCurrency = null)
         {
             using Stream s = zipEntry.Open();
             return LoadFromCsv(s, exchange, baseCurrency, debugInfo: zipEntry.FullName);
         }
 
-        public static TickerCandleHistory LoadFromCsv(Stream csvStream, string exchange, Func<string, string> baseCurrency = null, string debugInfo = null)
+        public static TickerCandleHistory LoadFromCsv(Stream csvStream, StockExchange exchange, Func<string, string> baseCurrency = null, string debugInfo = null)
         {
             baseCurrency ??= (tickerName) => "USD";
 

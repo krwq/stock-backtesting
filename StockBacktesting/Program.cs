@@ -4,7 +4,10 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using StockBacktesting.DataSets;
+using StockBacktesting.Model;
 using StockBacktesting.Strategies;
+using StockBacktesting.Utils;
 
 namespace StockBacktesting
 {
@@ -14,32 +17,16 @@ namespace StockBacktesting
         {
             // XAUPLN, XAUUSD // gold
             // XAGPLN, XAGUSD // silver
-            Console.WriteLine("Loading currencies data...");
-            string dailyWorldZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_world_txt.zip";
-            var currencies = StooqDataSets.GetCurrenciesFromDailyWorld(File.Open(dailyWorldZipPath, FileMode.Open, FileAccess.Read, FileShare.Read));
 
-            Console.WriteLine("Loading quick stock info...");
-            var interestingTickers = TradingViewDataSets.TradingViewMax1MSelected();
-
-            Console.WriteLine("Loading full stock info...");
+            Console.WriteLine("Loading stock info...");
             string dailyUsZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_us_txt.zip";
-            var nyseTickers = StooqDataSets.GetNyseFromDailyUs(File.Open(dailyUsZipPath, FileMode.Open, FileAccess.Read, FileShare.Read));
+            string dailyWorldZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_world_txt.zip";
+            string dailyPlZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_pl_txt.zip";
 
-            var tickers = new Dictionary<string, TickerCandleHistory>();
-            foreach (var kv in interestingTickers)
-            {
-                TickerCandleHistory tickerCandleHistory;
-                if (!nyseTickers.TryGetValue(kv.Key, out tickerCandleHistory) && !currencies.TryGetValue(kv.Key, out tickerCandleHistory))
-                {
-                    Console.WriteLine($"Could not find full stock info about '{kv.Key}'");
-                    tickerCandleHistory = kv.Value;
-                }
-                else // ? we could continue but probably better to skip
-                {
-                    tickers.Add(kv.Key, tickerCandleHistory);
-                }
-            }
+            var tickers = StooqDataSets.GetSelectedFromZips(dailyUsZipPath, dailyWorldZipPath, dailyPlZipPath);
 
+            //Console.WriteLine("Loading quick stock info...");
+            //var interestingTickers = TradingViewDataSets.TradingViewMax1MSelected();
 
             //var divHistory = await NasdaqData.GetDividendHistoryAsync("MSFT");
 
@@ -53,7 +40,7 @@ namespace StockBacktesting
             {
                 var hist = kv.Value;
                 var last = hist.LastCandle;
-                Console.WriteLine($"[n={hist.Candles.Count}] [{hist.Candles[0].TimeUtc}] {hist.TickerName} [{hist.Exchange}] [{hist.BaseCurrency}] [{last.TimeUtc}] => Open: {last.Open}, Close: {last.Close}, Low: {last.Low}, High: {last.High}");
+                Console.WriteLine($"[n={hist.Candles.Count}] [{hist.Candles[0].TimeUtc}] {hist.TickerName} [{hist.BaseCurrency}] [{last.TimeUtc}] => Open: {last.Open}, Close: {last.Close}, Low: {last.Low}, High: {last.High}");
             }
 
             //tickers.TestStrategyIncomeEveryMonth(StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(1000, 2012, 5), "PLN");
@@ -72,7 +59,7 @@ namespace StockBacktesting
                     break;
 
                 DateTime dt = DateTime.Parse(line, null, System.Globalization.DateTimeStyles.RoundtripKind);
-                TickerCandle candle = hist.FindClosestCandleToTime(dt, TimeSpan.FromDays(20));
+                TickerCandle candle = hist.Candles.FindClosestToTime(dt, TimeSpan.FromDays(20));
                 if (candle == null)
                 {
                     Console.WriteLine("Not found");

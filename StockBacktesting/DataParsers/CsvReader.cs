@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockBacktesting
+namespace StockBacktesting.DataParsers
 {
     internal static class CsvReader
     {

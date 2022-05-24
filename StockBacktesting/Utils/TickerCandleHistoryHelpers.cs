@@ -1,16 +1,17 @@
-﻿using System;
+﻿using StockBacktesting.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StockBacktesting
+namespace StockBacktesting.Utils
 {
     internal static class TickerCandleHistoryHelpers
     {
         public static void AddUsdToUsd(this Dictionary<string, TickerCandleHistory> tickers)
         {
-            TickerCandleHistory usdToUsd = new TickerCandleHistory("USDUSD");
+            TickerCandleHistory usdToUsd = new TickerCandleHistory("USDUSD", "USDUSD", StockExchange.Currency, "USD");
 
             foreach (var anyTickerKv in tickers)
             {
@@ -61,8 +62,8 @@ namespace StockBacktesting
             }
 
             // Try getting conversion through USD
-            Func<int, decimal> baseToUsd = GetConversionRateFunc(tickers, baseCurrency, "USD");
-            Func<int, decimal> usdToDest = GetConversionRateFunc(tickers, "USD", destinationCurrency);
+            Func<int, decimal> baseToUsd = tickers.GetConversionRateFunc(baseCurrency, "USD");
+            Func<int, decimal> usdToDest = tickers.GetConversionRateFunc("USD", destinationCurrency);
 
             return (i) => baseToUsd(i) * usdToDest(i);
         }
