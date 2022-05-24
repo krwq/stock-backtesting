@@ -22,8 +22,5 @@ namespace StockBacktesting
 
             return tickerHistories.ToDictionary((h) => h.TickerName);
         }
-
-        // currencies
-        //             //D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_world_txt.zip\data\daily\world\currencies\other\plnusd.txt
     }
 }

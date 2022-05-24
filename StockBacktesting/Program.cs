@@ -10,7 +10,7 @@ namespace StockBacktesting
 {
     class Program
     {
-        static async Task<int> Main(string[] args)
+        static int Main(string[] args) // async Task<int>
         {
             //var divHistory = await NasdaqData.GetDividendHistoryAsync("MSFT");
 
@@ -19,9 +19,10 @@ namespace StockBacktesting
             //    Console.WriteLine($"Ex: {div.ExDate}, Amt: {div.Amount}, Decl: {div.DeclarationDate}, Rec: {div.RecordDate}, Pmt: {div.PaymentDate}");
             //}
 
-            string zipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_us_txt.zip";
-            var tickers = StooqDataSets.GetNyseFromDailyUs(File.Open(zipPath, FileMode.Open));
-            string pathInZip = @"data/daily/us/nyse stocks/2/msft.us.txt";
+            //string dailyUsZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_us_txt.zip";
+            //var tickers = StooqDataSets.GetNyseFromDailyUs(File.Open(dailyUsZipPath, FileMode.Open));
+            string dailyWorldZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_world_txt.zip";
+            var currencies = StooqDataSets.GetCurrenciesFromDailyWorld(File.Open(dailyWorldZipPath, FileMode.Open));
 
             //int idx = 0;
             //foreach (TickerCandle candle in ticker.Candles)
@@ -36,10 +37,11 @@ namespace StockBacktesting
 
             var tickersTv = TradingViewDataSets.TradingViewMax1MSelected();
             tickersTv.AddUsdToUsd();
-            foreach (var kv in tickers)
+            foreach (var kv in currencies)
             {
                 var hist = kv.Value;
                 var last = hist.LastCandle;
+                if (!hist.TickerName.Contains('_')) continue;
                 Console.WriteLine($"{hist.TickerName} [{hist.Exchange}] [{hist.BaseCurrency}] [{last.TimeUtc}] => Open: {last.Open}, Close: {last.Close}, Low: {last.Low}, High: {last.High}");
             }
 

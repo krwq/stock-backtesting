@@ -10,14 +10,16 @@ namespace StockBacktesting
 {
     internal static class StooqData
     {
-        public static TickerCandleHistory LoadFromZip(ZipArchiveEntry zipEntry, string exchange, string baseCurrency = "USD")
+        public static TickerCandleHistory LoadFromZip(ZipArchiveEntry zipEntry, string exchange, Func<string, string> baseCurrency = null)
         {
             using Stream s = zipEntry.Open();
             return LoadFromCsv(s, exchange, baseCurrency, debugInfo: zipEntry.FullName);
         }
 
-        public static TickerCandleHistory LoadFromCsv(Stream csvStream, string exchange, string baseCurrency = "USD", string debugInfo = null)
+        public static TickerCandleHistory LoadFromCsv(Stream csvStream, string exchange, Func<string, string> baseCurrency = null, string debugInfo = null)
         {
+            baseCurrency ??= (tickerName) => "USD";
+
             IEnumerable<string[]> csvData = CsvReader.ReadCsv(csvStream);
             ColumnInfo colInfo = new(csvData.GetEnumerator(), debugInfo);
 
@@ -28,7 +30,7 @@ namespace StockBacktesting
                 if (ticker == null)
                 {
                     string simplifiedTickerName = colInfo.TickerName.Split('.')[0];
-                    ticker = new TickerCandleHistory(colInfo.TickerName, simplifiedTickerName, exchange, baseCurrency);
+                    ticker = new TickerCandleHistory(colInfo.TickerName, simplifiedTickerName, exchange, baseCurrency(simplifiedTickerName));
                 }
                 else
                 {
