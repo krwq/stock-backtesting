@@ -15,30 +15,31 @@ namespace StockBacktesting
         private const string TVC = "COMMODITY";
         private const string IDC = FOREX;
         private const string FXCM = FOREX;
-        private const string CBOE_BZX = "CBOE";
+        private const string CBOE_BZX = "NYSE";
         private const string GPW = "WSE";
 
-        public string TickerFullName { get; private set; }
-        public string TickerName { get; private set; }
+        public string OriginalTickerName { get; private set; }
+        public string SimplifiedTickerName { get; private set; }
+        public string TickerName => $"{SimplifiedTickerName},{Exchange}";
         public string Exchange { get; private set; }
         public string BaseCurrency { get; private set; }
         public List<TickerCandle> Candles { get; } = new List<TickerCandle>();
         public TickerCandle FirstCandle => Candles[0];
         public TickerCandle LastCandle => Candles[Candles.Count - 1];
 
-        public TickerCandleHistory(string tickerName)
+        public TickerCandleHistory(string simplifiedTickerName)
         {
-            TickerFullName = tickerName;
-            string[] parts = tickerName.Split(", ", 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            TickerName = parts[0];
+            OriginalTickerName = simplifiedTickerName;
+            string[] parts = simplifiedTickerName.Split(", ", 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            SimplifiedTickerName = parts[0];
             Exchange = GetSimplifiedExchangeName(parts);
-            BaseCurrency = GetCurrencyFromSimplifiedExchangeName(Exchange, TickerName);
+            BaseCurrency = GetCurrencyFromSimplifiedExchangeName(Exchange, SimplifiedTickerName);
         }
 
         public TickerCandleHistory(string tickerFullName, string tickerName, string exchange, string baseCurrency)
         {
-            TickerFullName = tickerFullName;
-            TickerName = tickerName;
+            OriginalTickerName = tickerFullName;
+            SimplifiedTickerName = tickerName;
             Exchange = exchange;
             BaseCurrency = baseCurrency;
         }

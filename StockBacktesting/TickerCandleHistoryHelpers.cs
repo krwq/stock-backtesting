@@ -66,5 +66,13 @@ namespace StockBacktesting
 
             return (i) => baseToUsd(i) * usdToDest(i);
         }
+
+        public static void AddTickersFrom(this Dictionary<string, TickerCandleHistory> tickers, Dictionary<string, TickerCandleHistory> tickersToAdd)
+        {
+            foreach (var kv in tickersToAdd)
+            {
+                tickers.Add(kv.Key, kv.Value);
+            }
+        }
     }
 }

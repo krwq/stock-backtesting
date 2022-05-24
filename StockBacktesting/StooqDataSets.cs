@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -12,12 +13,19 @@ namespace StockBacktesting
     {
         public static Dictionary<string, TickerCandleHistory> GetNyseFromDailyUs(Stream zipStream)
         {
-            return GetTickers(zipStream, @"data/daily/us/nyse stocks/", "NYSE", (tickerName) => "USD");
+            const string exchange = "NYSE";
+            Func<string, string> baseCurrency = (tickerName) => "USD";
+            using ZipArchive zip = new ZipArchive(zipStream);
+            var spy = StooqData.LoadFromZip(zip.GetEntry(@"data/daily/us/nyse etfs/2/spy.us.txt"), exchange, baseCurrency);
+            var ret = GetTickers(zip, @"data/daily/us/nyse stocks/", exchange, baseCurrency);
+            ret.Add(spy.TickerName, spy);
+            return ret;
         }
 
         public static Dictionary<string, TickerCandleHistory> GetCurrenciesFromDailyWorld(Stream zipStream)
         {
-            return GetTickers(zipStream, @"data/daily/world/currencies/", "FOREX",
+            using ZipArchive zip = new ZipArchive(zipStream);
+            return GetTickers(zip, @"data/daily/world/currencies/", "FOREX",
                 (tickerName) =>
                 {
                     int underscorePos = tickerName.IndexOf('_');
@@ -35,10 +43,9 @@ namespace StockBacktesting
                 });
         }
 
-        private static Dictionary<string, TickerCandleHistory> GetTickers(Stream zipStream, string zipPath, string exchange, Func<string, string> baseCurrency)
+        private static Dictionary<string, TickerCandleHistory> GetTickers(ZipArchive zip, string zipPath, string exchange, Func<string, string> baseCurrency)
         {
             Dictionary<string, TickerCandleHistory> tickers = new();
-            using ZipArchive zip = new ZipArchive(zipStream);
             foreach (var entry in zip.Entries)
             {
                 // daily world somehow ended up with single backslash in the path

@@ -34,9 +34,9 @@ namespace StockBacktesting
                 }
                 else
                 {
-                    if (ticker.TickerFullName != colInfo.TickerName)
+                    if (ticker.OriginalTickerName != colInfo.TickerName)
                     {
-                        throw new Exception($"Rows contains data about different ticker. First row has '{ticker.TickerFullName}' but other has '{colInfo.TickerName}'");
+                        throw new Exception($"Rows contains data about different ticker. First row has '{ticker.OriginalTickerName}' but other has '{colInfo.TickerName}'");
                     }
                 }
 
