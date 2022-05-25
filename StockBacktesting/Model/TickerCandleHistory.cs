@@ -10,7 +10,8 @@ namespace StockBacktesting.Model
     {
         public string OriginalTickerName { get; private set; }
         public string SimplifiedTickerName { get; private set; }
-        public string TickerName => $"{SimplifiedTickerName},{Exchange}";
+        // For currencies it's easier not to type exchange as they are easier to lookup this way
+        public string TickerName => Exchange != StockExchange.Currency ? $"{SimplifiedTickerName},{Exchange}" : SimplifiedTickerName;
         public StockExchange Exchange { get; private set; }
         public string BaseCurrency { get; private set; }
         public List<TickerCandle> Candles { get; } = new List<TickerCandle>();

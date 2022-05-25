@@ -36,12 +36,25 @@ namespace StockBacktesting
             //}
 
             //fff.AddUsdToUsd();
-            foreach (var kv in tickers)
+
+            tickers.RemoveDataBefore(new DateTime(1995, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+            foreach (var kv in tickers.TestStrategyIncomeEveryMonth(StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(200, 1995, 5)))
             {
-                var hist = kv.Value;
-                var last = hist.LastCandle;
-                Console.WriteLine($"[n={hist.Candles.Count}] [{hist.Candles[0].TimeUtc}] {hist.TickerName} [{hist.BaseCurrency}] [{last.TimeUtc}] => Open: {last.Open}, Close: {last.Close}, Low: {last.Low}, High: {last.High}");
+                DateOnly from = DateOnly.FromDateTime(kv.Value.InvestementStartUtc);
+                DateOnly to = DateOnly.FromDateTime(kv.Value.InvestmentEndUtc);
+                Console.WriteLine($"{kv.Value} [{from}]-[{to}]");
             }
+
+            //foreach (var kv in tickers)
+            //{
+            //    var hist = kv.Value;
+            //    var last = hist.LastCandle;
+            //    DateOnly from = DateOnly.FromDateTime(hist.Candles[0].TimeUtc);
+            //    DateOnly to = DateOnly.FromDateTime(last.TimeUtc);
+            //    string line = $"[{from}]-[{to}] {hist.TickerName} [{hist.BaseCurrency}] [n={hist.Candles.Count}] => Open: {last.Open}, Close: {last.Close}, Low: {last.Low}, High: {last.High}";
+            //    Console.WriteLine(line);
+            //}
 
             //tickers.TestStrategyIncomeEveryMonth(StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(1000, 2012, 5), "PLN");
             //InteractiveQueryPrice(tickers["PLATINUM"]);
@@ -59,13 +72,14 @@ namespace StockBacktesting
                     break;
 
                 DateTime dt = DateTime.Parse(line, null, System.Globalization.DateTimeStyles.RoundtripKind);
-                TickerCandle candle = hist.Candles.FindClosestToTime(dt, TimeSpan.FromDays(20));
-                if (candle == null)
+                int closesIdx = hist.Candles.FindClosestToTime(dt, TimeSpan.FromDays(20));
+                if (closesIdx == -1)
                 {
                     Console.WriteLine("Not found");
                 }
                 else
                 {
+                    TickerCandle candle = hist.Candles[closesIdx];
                     Console.WriteLine($"Time: {candle.TimeUtc} Open: {candle.Open}, Close: {candle.Close}, Low: {candle.Low}, High: {candle.High}");
                 }
             }
