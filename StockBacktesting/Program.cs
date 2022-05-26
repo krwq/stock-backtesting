@@ -19,9 +19,9 @@ namespace StockBacktesting
             // XAGPLN, XAGUSD // silver
 
             Console.WriteLine("Loading stock info...");
-            string dailyUsZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_us_txt.zip";
-            string dailyWorldZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_world_txt.zip";
-            string dailyPlZipPath = @"D:\src\StockBacktesting\StockBacktesting\data\stooq\daily_pl_txt.zip";
+            string dailyUsZipPath = @"D:\src\stock-backtesting\StockBacktesting\data\stooq\daily_us_txt.zip";
+            string dailyWorldZipPath = @"D:\src\stock-backtesting\StockBacktesting\data\stooq\daily_world_txt.zip";
+            string dailyPlZipPath = @"D:\src\stock-backtesting\StockBacktesting\data\stooq\daily_pl_txt.zip";
 
             var tickers = StooqDataSets.GetSelectedFromZips(dailyUsZipPath, dailyWorldZipPath, dailyPlZipPath);
 
@@ -37,13 +37,34 @@ namespace StockBacktesting
 
             //fff.AddUsdToUsd();
 
-            tickers.RemoveDataBefore(new DateTime(1995, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            DateTime cutOffDate = new DateTime(1995, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            tickers.RemoveDataBefore(cutOffDate);
+            tickers.AddUsdToUsd();
 
-            foreach (var kv in tickers.TestStrategyIncomeEveryMonth(StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(200, 1995, 5)))
+            //foreach (var kv in tickers.TestStrategyIncomeEveryMonth(StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(200, 1995, 5)))
+            //{
+            //    DateOnly from = DateOnly.FromDateTime(kv.Value.InvestementStartUtc);
+            //    DateOnly to = DateOnly.FromDateTime(kv.Value.InvestmentEndUtc);
+            //    Console.WriteLine($"{kv.Value} [{from}]-[{to}]");
+            //}
+
+            for (; cutOffDate.Year < 2020; cutOffDate = cutOffDate.AddYears(5))
             {
-                DateOnly from = DateOnly.FromDateTime(kv.Value.InvestementStartUtc);
-                DateOnly to = DateOnly.FromDateTime(kv.Value.InvestmentEndUtc);
-                Console.WriteLine($"{kv.Value} [{from}]-[{to}]");
+                Console.Clear();
+                Console.WriteLine($"Cut-off date: {DateOnly.FromDateTime(cutOffDate)}");
+                tickers.RemoveDataBefore(cutOffDate);
+
+                foreach (var kv in tickers.TestStrategyIncomeEveryMonthPerInterval(TimeSpan.FromDays(365 * 5 + 1), StrategyIncomeEveryMonth.GetYearlyIncomeIncreaseFunc(1000, 2010, 3), "EUR"))
+                {
+                    string tickerName = kv.Key;
+                    TickerCandleHistory ticker = tickers[tickerName];
+                    StrategyInvestmentResult[] results = kv.Value;
+                    StrategyInvestmentResult max = results.Aggregate((a, b) => a.InvestmentReturnPercentage > b.InvestmentReturnPercentage ? a : b);
+                    StrategyInvestmentResult min = results.Aggregate((a, b) => a.InvestmentReturnPercentage < b.InvestmentReturnPercentage ? a : b);
+                    Console.WriteLine($"{ticker.TickerName.PadRight(12)}: {min.InvestmentReturnPercentage,9:+#.##;-#.##;+0.00}% [{DateOnly.FromDateTime(min.InvestementStartUtc)}-{DateOnly.FromDateTime(min.InvestmentEndUtc)}] - {max.InvestmentReturnPercentage,9:+#.##;-#.##;+0.00}% [{DateOnly.FromDateTime(max.InvestementStartUtc)}-{DateOnly.FromDateTime(max.InvestmentEndUtc)}]");
+                }
+
+                Console.ReadLine();
             }
 
             //foreach (var kv in tickers)

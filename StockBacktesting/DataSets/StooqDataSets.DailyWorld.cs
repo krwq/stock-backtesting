@@ -16,9 +16,9 @@ namespace StockBacktesting.DataSets
             private static string[] s_selectedCurrenciesFromDailyWorld = new[]
             {
                 "PLNUSD",
-                "JPYUSD",
+                //"JPYUSD",
                 "EURUSD",
-                "GBPUSD",
+                //"GBPUSD",
                 "XAUUSD", // GOLD
                 "XAGUSD", // SILVER
                 "XPTUSD", // PLATINUM

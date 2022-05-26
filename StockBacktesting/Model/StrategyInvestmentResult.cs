@@ -17,9 +17,11 @@ namespace StockBacktesting.Model
         public DateTime InvestementStartUtc { get; set; }
         public DateTime InvestmentEndUtc { get; set; }
 
+        public decimal InvestmentReturnPercentage => 100.0m * TotalReturn / TotalInvested - 100.0m;
+
         public override string ToString()
         {
-            return $"{TickerName.PadRight(10)} [{InvestmentCurrency}]: ratio: {100.0m * TotalReturn / TotalInvested - 100.0m,8:+#.##;-#.##;+0.00}% [{TotalReturn,10:0.00} / {TotalInvested,9:0.00}]";
+            return $"{TickerName.PadRight(12)}: ratio: {InvestmentReturnPercentage,9:+#.##;-#.##;+0.00}% [{TotalReturn,11:0.00} / {TotalInvested,9:0.00} {InvestmentCurrency}]";
         }
     }
 }

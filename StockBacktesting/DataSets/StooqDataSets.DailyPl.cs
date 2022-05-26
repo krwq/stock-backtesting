@@ -13,11 +13,11 @@ namespace StockBacktesting.DataSets
         private static class DailyPl
         {
             private const string WseStocksDailPlZipPath = @"data/daily/pl/wse stocks/";
-            private static string[] s_selectedFromWseStocksDailyPl = new[]
+            private static string[] s_selectedFromWseStocksDailyPl = new string[]
             {
-                "CDR",
-                "KGH",
-                "PKN",
+                //"CDR",
+                //"KGH",
+                //"PKN",
             };
 
             private static string BaseCurrency_PLN(string tickerName) => "PLN";

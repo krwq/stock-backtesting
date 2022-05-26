@@ -24,24 +24,26 @@ namespace StockBacktesting.Utils
         {
             TickerCandleHistory usdToUsd = new TickerCandleHistory("USDUSD", "USDUSD", StockExchange.Currency, "USD");
 
-            foreach (var anyTickerKv in tickers)
-            {
-                TickerCandleHistory anyTicker = anyTickerKv.Value;
-                for (int i = 0; i < anyTicker.Candles.Count; i++)
-                {
-                    usdToUsd.Candles.Add(new TickerCandle()
-                    {
-                        TimeUtc = anyTicker.Candles[i].TimeUtc,
-                        Open = 1.0m,
-                        Close = 1.0m,
-                        Low = 1.0m,
-                        High = 1.0m,
-                    });
-                }
+            TickerCandleHistory anyTicker =
+                tickers.GetValueOrDefault("PLNUSD")
+                ?? tickers.GetValueOrDefault("USDPLN")
+                ?? tickers.GetValueOrDefault("MSFT,NYSE")
+                ?? tickers.First().Value;
 
-                tickers.Add(usdToUsd.TickerName, usdToUsd);
-                return;
+
+            for (int i = 0; i < anyTicker.Candles.Count; i++)
+            {
+                usdToUsd.Candles.Add(new TickerCandle()
+                {
+                    TimeUtc = anyTicker.Candles[i].TimeUtc,
+                    Open = 1.0m,
+                    Close = 1.0m,
+                    Low = 1.0m,
+                    High = 1.0m,
+                });
             }
+
+            tickers.Add(usdToUsd.TickerName, usdToUsd);
         }
 
         public static Func<DateTime, decimal> GetConversionRateFunc(this Dictionary<string, TickerCandleHistory> tickers, string baseCurrency, string destinationCurrency)
