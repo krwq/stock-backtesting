@@ -19,7 +19,10 @@ namespace StockBacktesting.DataParsers
     {
         public static async Task<DividendHistory> GetDividendHistoryAsync(string tickerName)
         {
-            using var client = new HttpClient();
+            HttpClientHandler handler = new HttpClientHandler();
+            handler.AutomaticDecompression = DecompressionMethods.GZip;
+            using var client = new HttpClient(handler);
+            client.DefaultRequestHeaders.Add("Accept", "*/*");
             client.Timeout = TimeSpan.FromSeconds(5);
 
             string requestUri = $"https://api.nasdaq.com/api/quote/{tickerName}/dividends?assetclass=stocks";

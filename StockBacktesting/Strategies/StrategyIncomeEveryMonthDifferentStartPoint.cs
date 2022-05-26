@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace StockBacktesting.Strategies
 {
-    // Assumes monthly candles but no assumptions on candle time consistency between tickers
+    // No assumptions on candle time consistency between tickers
     internal static class StrategyIncomeEveryMonthDifferentStartPoint
     {
         public static Dictionary<string, StrategyInvestmentResult> TestStrategyIncomeEveryMonth(this Dictionary<string, TickerCandleHistory> tickers, Func<DateTime, decimal> monthlyIncome, string currency = "PLN")
@@ -27,34 +27,50 @@ namespace StockBacktesting.Strategies
 
                 Func<DateTime, decimal> baseToTickerRate = tickers.GetConversionRateFunc(currency, tickerCurr);
 
-                for (int i = 0; i < max; i++)
+                DateTime firstAvailable = ticker.Candles[0].TimeUtc;
+                DateTime start = new DateTime(firstAvailable.Year, firstAvailable.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                DateTime lastAvailable = ticker.LastCandle.TimeUtc;
+                DateTime last = new DateTime(lastAvailable.Year, lastAvailable.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+                TickerCandle lastCandle = null;
+                for (DateTime date = start; date <= last; date = date.AddMonths(1))
                 {
-                    TickerCandle tickerCandle = ticker.Candles[i];
-                    decimal income = monthlyIncome(tickerCandle.TimeUtc);
+                    decimal income = monthlyIncome(date);
                     totalCash += income;
                     totalInvestedCash += income;
 
-                    if (tickerCandle.Close.HasValue)
+                    // ignore candle if it's next month
+                    int tickerCandleIdx = ticker.Candles.FindFirstNotBeforeWithin(date, TimeSpan.FromDays(31));
+                    TickerCandle tickerCandle = tickerCandleIdx == -1 ? null : ticker.Candles[tickerCandleIdx];
+                    if (tickerCandleIdx != -1 && tickerCandle.TimeUtc.Month == date.Month)
                     {
-                        decimal totalCashInTickerCurrency = totalCash * baseToTickerRate(tickerCandle.TimeUtc);
+                        lastCandle = tickerCandle;
 
-                        // we invest all cash in the ticker
-                        tickerAmt += totalCashInTickerCurrency / tickerCandle.Close.Value;
-                        totalCash = 0;
+                        if (tickerCandle.Close.HasValue)
+                        {
+                            // conversion rate from the ticker not date!
+                            decimal totalCashInTickerCurrency = totalCash * baseToTickerRate(tickerCandle.TimeUtc);
+
+                            // we invest all cash in the ticker
+                            tickerAmt += totalCashInTickerCurrency / tickerCandle.Close.Value;
+                            totalCash = 0;
+                        }
                     }
-
-                    // if no value, we keep cash until next month
+                    else
+                    {
+                        Console.WriteLine($"Warning: Ticker '{ticker.TickerName}' does not have data for {DateOnly.FromDateTime(date)}");
+                    }
                 }
 
-                decimal totalReturnInTickerCurrency = tickerAmt * ticker.LastCandle.Close.Value;
-                decimal totalReturn = totalCash + totalReturnInTickerCurrency / baseToTickerRate(ticker.LastCandle.TimeUtc);
+                decimal totalReturnInTickerCurrency = tickerAmt * lastCandle.Close.Value;
+                decimal totalReturn = totalCash + totalReturnInTickerCurrency / baseToTickerRate(lastCandle.TimeUtc);
 
                 ret[ticker.TickerName] = new StrategyInvestmentResult()
                 {
                     TickerName = ticker.TickerName,
                     InvestmentCurrency = currency,
-                    InvestementStartUtc = ticker.Candles[0].TimeUtc,
-                    InvestmentEndUtc = ticker.LastCandle.TimeUtc,
+                    InvestementStartUtc = start,
+                    InvestmentEndUtc = last,
                     TotalInvested = totalInvestedCash,
                     TotalReturn = totalReturn,
                 };
